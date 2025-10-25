@@ -5,6 +5,7 @@ const app = express();
 const cors = require("cors");
 //enable CORS for all routes
 app.use(cors());
+app.use(express.static("dist"));
 //middleware to parse incoming JSON request data
 app.use(express.json());
 
