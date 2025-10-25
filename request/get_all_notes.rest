@@ -1,0 +1,53 @@
+DELETE http://localhost:3003/api/persons/3
+
+###
+POST http://localhost:3003/api/persons
+Content-Type: application/json
+
+{
+    "name": "Fabian",
+    "number": "041-1234568"
+}
+
+###
+POST http://localhost:3003/api/persons
+Content-Type: application/json
+
+{
+    "name": "King",
+    "number": "051-22355568"
+}
+
+###
+POST http://localhost:3003/api/persons
+Content-Type: application/json
+
+{
+    "name": "King",
+    "number": "051-22355568"
+}
+
+###
+POST http://localhost:3003/api/persons
+Content-Type: application/json
+
+{
+    "number": "051-22355568"
+}
+
+###
+POST http://localhost:3003/api/persons  
+Content-Type: application/json
+
+{
+    "name": "Alice"
+}
+
+###
+POST http://localhost:3003/api/persons
+Content-Type: application/json  
+
+{
+    "name": "Mabian",
+    "number": "021-10045567"
+}
