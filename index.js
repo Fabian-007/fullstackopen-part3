@@ -116,7 +116,7 @@ app.post("/api/persons", (req, res) => {
  app.use(unknownEndpoint);
 
 // start server and listen on the specified port;
-const PORT = proces.env.PORT || 3003;
+const PORT = process.env.PORT || 3003;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
