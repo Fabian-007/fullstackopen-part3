@@ -1,5 +1,7 @@
 //import express module
 const express = require("express");
+require("dotenv").config();
+const Person = require("./model/persons");  
 const morgan = require("morgan");
 const app = express();
 const cors = require("cors");
@@ -9,34 +11,13 @@ app.use(express.static("dist"));
 //middleware to parse incoming JSON request data
 app.use(express.json());
 
+
 // define custom token to log request body
 morgan.token("body", (req) => JSON.stringify(req.body));
 
 //use the token in a custom format
 app.use(morgan(":method :url :status :res[content-length] - :response-time ms :body"));
 
-let persons = [
-  {
-    id: "1",
-    name: "Arto Hellas",
-    number: "040-123456",
-  },
-  {
-    id: "2",
-    name: "Ada Lovelace",
-    number: "39-44-5323523",
-  },
-  {
-    id: "3",
-    name: "Dan Abramov",
-    number: "12-43-234345",
-  },
-  {
-    id: "4",
-    name: "Mary Poppendieck",
-    number: "39-23-6423122",
-  },
-];
 
 const unknownEndpoint = (req, res) => {
   res.status(404).send({ error: "unknown endpoint" });
@@ -44,7 +25,9 @@ const unknownEndpoint = (req, res) => {
 
 //route handler for the root path
 app.get("/api/persons", (req, res) => {
-  res.json(persons);
+Person.find({}).then((notes) => {
+    res.json(notes);
+  });   
 });
 
 //route handler for the /info path
@@ -58,27 +41,54 @@ app.get("/info", (req, res) => {
 //route handler for the /api/persons/:id path
 app.get("/api/persons/:id", (req, res) => {
   const id = req.params.id;
-  const person = persons.find((person) => person.id === id);
-
-  if (person) {
+  Person.findById(id).then((person) => {
+   if (person) {
     res.json(person);
   } else {
     res.status(404).end();
   }
+})
+.catch((error) => {
+    console.log(error);
+    res.status(500).end()
+})
+})
+app.put("/api/persons/:id", (req, res, next) => {
+  const id = req.params.id;
+  const body = req.body;
+
+  const { name, number } = body;
+  Person.findById(id)
+    .then((person) => {
+      if (person) {
+        person.name = name;
+        person.number = number;
+        return person.save().then((updatedPerson) => {
+          res.json(updatedPerson);
+        }); 
+      }
+      else {
+        res.status(404).end();
+      }
+    })
+    .catch((error) => next(error));
 });
 
-app.delete("/api/persons/:id", (req, res) => {
+app.delete("/api/persons/:id", (req, res, next) => {
   const id = req.params.id;
-  persons = persons.filter((person) => person.id !== id);
-  res.status(204).end();
+  Person.findByIdAndDelete(id).then(() => {
+    res.status(204).end();
+  }).catch((error) => next(error));
 });
+
+
 // generate a new random id for a new person
 const generateId = () => {
   const maxId = persons.length > 0 ? Math.floor(Math.random() * 10000) : 0;
   return (maxId + 1).toString();
 };
 
-app.post("/api/persons", (req, res) => {
+app.post("/api/persons", (req, res, next) => {
   const body = req.body;
   console.log(body);
 
@@ -88,12 +98,13 @@ app.post("/api/persons", (req, res) => {
     });
   }
 
-  // create a new person object
-  const person = {
-    id: generateId(),
+  // create a new person object with mongoose model
+  const person = new Person({
     name: body.name,
     number: body.number,
-  };
+    // id: generateId(),
+  });
+
   // validate that the name and number are provided and that the name is unique
   if (!person.name || !person.number) {
     return res.status(400).json({
@@ -102,18 +113,35 @@ app.post("/api/persons", (req, res) => {
   }
 
   // check for duplicate names
-  if (persons.find((p) => p.name === person.name)) {
-    return res.status(400).json({
-      error: "name must be unique",
-    });
-  }
+  // if (persons.find((p) => p.name === person.name)) {
+  //   return res.status(400).json({
+  //     error: "name must be unique",
+  //   });
+  // }
 
-  persons = persons.concat(person);
-  res.status(201).json(person);
+person.save().then((savedPerson) => {
+    res.json(savedPerson);
+  })
+  .catch((error) => next(error));
 });
 
 //middleware to handle unknown endpoints
  app.use(unknownEndpoint);
+
+ const errorHandler = (error, req, res, next) => {
+  console.error(error.message);
+  if (error.name === "CastError") {
+    return res.status(400).send({ error: "malformatted id" });
+  }
+  //handle validation errors
+  else if (error.name === "ValidationError") {
+    return res.status(400).json({ error: error.message });
+  }
+  next(error);
+}
+
+app.use(errorHandler);
+
 
 // start server and listen on the specified port;
 const PORT = process.env.PORT || 3003;

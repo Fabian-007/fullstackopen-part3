@@ -48,6 +48,22 @@ POST http://localhost:3003/api/persons
 Content-Type: application/json  
 
 {
-    "name": "Mabian",
-    "number": "021-10045567"
+    "name": "Nzube Obi",
+    "number": "07078576246"
 }
+
+###
+GET https://phonebook-app-6vzh.onrender.com
+
+###
+DELETE http://localhost:3003/api/persons/690ed7d2683c5a3657575e3e
+
+###
+
+PUT http://localhost:3003/api/persons/690c150f8656c1c76dae64a7
+Content-Type: application/json
+
+{
+    "name": "Nobert",
+    "number": "08012345678"
+}   
